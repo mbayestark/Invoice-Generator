@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Facture — DAUST Student Government</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #F5F2EC;
+  --surface: #FDFAF5;
+  --ink: #1A1714;
+  --ink2: #6B6560;
+  --ink3: #B0AAA3;
+  --accent: #C8651A;
+  --accent-light: #F4E6D8;
+  --green: #1D7A50;
+  --green-light: #D6F0E4;
+  --border: #E0DAD2;
+  --border-strong: #C4BDB4;
+  --r: 6px;
+  --r-lg: 12px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--ink); font-size: 13px; min-height: 100vh; }
+
+/* LAYOUT */
+.app { display: grid; grid-template-columns: 380px 1fr; min-height: 100vh; }
+
+/* LEFT PANEL */
+.panel {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+}
+.panel-header {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 18px 20px;
+  flex-shrink: 0;
+}
+.panel-header h1 { font-family: 'IBM Plex Sans', sans-serif; font-size: 18px; font-weight: 200; }
+.panel-header h1 em { font-style: italic; color: #C8A882; }
+.panel-header span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #888; display: block; margin-top: 2px; }
+
+.panel-body { padding: 20px; flex: 1; overflow-y: auto; }
+
+.section-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink3);
+  margin-bottom: 10px;
+  margin-top: 20px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+.section-label:first-child { margin-top: 0; }
+
+.field { margin-bottom: 10px; }
+.field label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink3); display: block; margin-bottom: 4px; }
+.field input, .field textarea, .field select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 7px 10px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--ink);
+  transition: border-color 0.15s;
+}
+.field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--accent); }
+.field textarea { resize: vertical; min-height: 60px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+/* LINE ITEMS */
+.items-header {
+  display: grid;
+  grid-template-columns: 1fr 52px 72px 24px;
+  gap: 4px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--ink3);
+  padding: 0 0 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.item-row {
+  display: grid;
+  grid-template-columns: 1fr 52px 72px 24px;
+  gap: 4px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.item-row input {
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 6px 7px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  background: var(--bg);
+  color: var(--ink);
+  width: 100%;
+  transition: border-color 0.15s;
+}
+.item-row input:focus { outline: none; border-color: var(--accent); }
+.item-row input[type=number] { text-align: right; }
+.del-item {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--ink3);
+  font-size: 14px;
+  padding: 4px;
+  border-radius: var(--r);
+  line-height: 1;
+  text-align: center;
+}
+.del-item:hover { color: #C02B2B; background: #FAE0E0; }
+
+.btn-add-item {
+  width: 100%;
+  padding: 7px;
+  background: none;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--r);
+  color: var(--ink2);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+.btn-add-item:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+.preset-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+.chip {
+  padding: 3px 9px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  font-size: 11px;
+  color: var(--ink2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+.panel-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.btn-print {
+  flex: 1;
+  padding: 10px;
+  background: var(--ink);
+  color: var(--bg);
+  border: none;
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-print:hover { background: #333; }
+.btn-new {
+  padding: 10px 14px;
+  background: none;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  color: var(--ink2);
+  cursor: pointer;
+}
+.btn-new:hover { background: var(--bg); }
+
+/* RIGHT: PREVIEW */
+.preview-area {
+  background: #E8E4DD;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 24px;
+  overflow-y: auto;
+}
+
+/* INVOICE DOCUMENT */
+.invoice {
+  background: #fff;
+  width: 794px;
+  min-height: 1123px;
+  padding: 56px 60px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 12px;
+  color: #1A1714;
+  position: relative;
+}
+
+.inv-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 44px;
+}
+.inv-brand {}
+.inv-brand .wordmark {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 28px;
+  font-weight: 200;
+  color: #1A1714;
+  line-height: 1;
+}
+.inv-brand .wordmark em { font-style: italic; color: var(--accent); }
+.inv-brand .tagline { font-size: 10px; color: #B0AAA3; margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.inv-meta { text-align: right; }
+.inv-meta .inv-label { font-family: 'IBM Plex Sans', sans-serif; font-size: 22px; font-weight: 200; color: #1A1714; margin-bottom: 8px; }
+.inv-meta table { font-size: 11px; margin-left: auto; }
+.inv-meta td { padding: 2px 0 2px 16px; }
+.inv-meta td:first-child { color: #B0AAA3; text-align: right; text-transform: uppercase; letter-spacing: 0.06em; }
+.inv-meta td:last-child { font-weight: 500; }
+
+.inv-divider { border: none; border-top: 1px solid #E0DAD2; margin: 32px 0; }
+
+.inv-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 36px; }
+.party-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #B0AAA3; margin-bottom: 8px; }
+.party-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; font-weight: 400; margin-bottom: 4px; }
+.party-detail { font-size: 11px; color: #6B6560; line-height: 1.7; white-space: pre-line; }
+
+/* ITEMS TABLE */
+.inv-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.inv-table thead th {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #B0AAA3;
+  padding: 8px 10px;
+  border-bottom: 1px solid #E0DAD2;
+  font-weight: 400;
+  text-align: right;
+}
+.inv-table thead th:first-child { text-align: left; }
+.inv-table tbody td {
+  padding: 11px 10px;
+  border-bottom: 1px solid #F0EDE8;
+  color: #1A1714;
+  vertical-align: middle;
+  text-align: right;
+}
+.inv-table tbody td:first-child { text-align: left; }
+.inv-table tbody tr:last-child td { border-bottom: none; }
+.item-desc { font-size: 12px; }
+.item-desc-sub { font-size: 10px; color: #B0AAA3; margin-top: 1px; }
+
+.inv-totals {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0;
+  border-top: 1px solid #E0DAD2;
+  padding-top: 16px;
+}
+.totals-table { font-size: 12px; }
+.totals-table td { padding: 4px 0 4px 32px; }
+.totals-table td:first-child { color: #B0AAA3; text-align: right; text-transform: uppercase; letter-spacing: 0.06em; }
+.totals-table .total-row td { border-top: 1px solid #E0DAD2; padding-top: 10px; margin-top: 8px; }
+.totals-table .total-row td:first-child { color: #1A1714; }
+.totals-table .total-row .amount {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.inv-notes {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid #F0EDE8;
+}
+.inv-notes .notes-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #B0AAA3; margin-bottom: 8px; }
+.inv-notes .notes-text { font-size: 11px; color: #6B6560; line-height: 1.7; white-space: pre-line; }
+
+.inv-footer {
+  position: absolute;
+  bottom: 40px;
+  left: 60px;
+  right: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #C8C1B8;
+  border-top: 1px solid #F0EDE8;
+  padding-top: 12px;
+}
+
+/* STATUS BADGE */
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.status-draft { background: #F0EDE8; color: #B0AAA3; }
+.status-sent  { background: #EAF3DE; color: #3B6D11; }
+.status-paid  { background: #D6F0E4; color: #1D7A50; }
+
+#btn-pdf.loading { opacity: 0.6; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- LEFT PANEL -->
+  <aside class="panel">
+    <div class="panel-header">
+      <h1><em>DAUST</em> Student Government</h1>
+      <span>Générateur de factures</span>
+    </div>
+
+    <div class="panel-body">
+
+      <!-- META -->
+      <div class="section-label">Facture</div>
+      <div class="row2">
+        <div class="field">
+          <label>N° facture</label>
+          <input type="text" id="inv-num" value="FAC-001" oninput="render()">
+        </div>
+        <div class="field">
+          <label>Statut</label>
+          <select id="inv-status" onchange="render()">
+            <option value="draft">Brouillon</option>
+            <option value="sent">Envoyée</option>
+            <option value="paid">Payée</option>
+          </select>
+        </div>
+      </div>
+      <div class="row2">
+        <div class="field">
+          <label>Date</label>
+          <input type="date" id="inv-date" oninput="render()">
+        </div>
+        <div class="field">
+          <label>Échéance</label>
+          <input type="date" id="inv-due" oninput="render()">
+        </div>
+      </div>
+
+      <!-- VENDEUR -->
+      <div class="section-label">Vendeur</div>
+      <div class="field">
+        <label>Nom / Société</label>
+        <input type="text" id="s-name" value="DAUST Student Government" oninput="render()">
+      </div>
+      <div class="field">
+        <label>Adresse / Détails</label>
+        <textarea id="s-detail" oninput="render()">DAUST, Dakar, Sénégal
+studentgov@daust.edu.sn</textarea>
+      </div>
+
+      <!-- CLIENT -->
+      <div class="section-label">Client</div>
+      <div class="field">
+        <label>Nom / Société</label>
+        <input type="text" id="c-name" placeholder="Nom du client" oninput="render()">
+      </div>
+      <div class="field">
+        <label>Adresse / Détails</label>
+        <textarea id="c-detail" placeholder="Adresse, email, téléphone…" oninput="render()"></textarea>
+      </div>
+
+      <!-- ARTICLES -->
+      <div class="section-label">Articles</div>
+      <div class="preset-chips" id="preset-chips"></div>
+      <div class="items-header">
+        <span>Désignation</span>
+        <span style="text-align:right">Qté</span>
+        <span style="text-align:right">P.U.</span>
+        <span></span>
+      </div>
+      <div id="items-list"></div>
+      <button class="btn-add-item" onclick="addItem()">+ Ajouter un article</button>
+
+      <!-- TAX & NOTES -->
+      <div class="section-label">Taxe & Notes</div>
+      <div class="row2">
+        <div class="field">
+          <label>Remise (%)</label>
+          <input type="number" id="discount" value="0" min="0" max="100" step="1" oninput="render()">
+        </div>
+        <div class="field">
+          <label>TVA (%)</label>
+          <input type="number" id="tax" value="0" min="0" max="100" step="1" oninput="render()">
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes / Conditions</label>
+        <textarea id="notes" placeholder="Conditions de paiement, notes…" oninput="render()">Paiement à réception par cash ou Wave / Orange Money.</textarea>
+      </div>
+    </div>
+
+    <div class="panel-footer">
+      <button class="btn-print" id="btn-pdf" onclick="savePDF()">Enregistrer PDF ↓</button>
+      <button class="btn-new" onclick="resetInvoice()">Nouveau</button>
+    </div>
+  </aside>
+
+  <!-- RIGHT: PREVIEW -->
+  <div class="preview-area">
+    <div class="invoice" id="invoice">
+      <!-- rendered by JS -->
+    </div>
+  </div>
+
+</div>
+
+<script>
+const CATALOG = [
+  { name: "T-shirt",     price: 6500 },
+  { name: "Shorts",      price: 11000 },
+  { name: "Joggers",     price: 10000 },
+  { name: "Hoodie",      price: 11000 },
+  { name: "Quarter Zip", price: 14000 },
+  { name: "Bottle",      price: 4500 },
+  { name: "Thermos",     price: 5500 },
+  { name: "Mug",         price: 2500 },
+];
+
+let items = [{ desc: "", qty: 1, pu: 0 }];
+
+// Set default dates
+const today = new Date();
+const due = new Date(); due.setDate(today.getDate() + 7);
+document.getElementById("inv-date").value = today.toISOString().slice(0,10);
+document.getElementById("inv-due").value = due.toISOString().slice(0,10);
+
+// Build preset chips
+const chips = document.getElementById("preset-chips");
+CATALOG.forEach(p => {
+  const ch = document.createElement("span");
+  ch.className = "chip";
+  ch.textContent = p.name;
+  ch.onclick = () => addPreset(p);
+  chips.appendChild(ch);
+});
+
+function addPreset(p) {
+  const existing = items.find(i => i.desc === p.name);
+  if (existing) { existing.qty++; }
+  else { items.push({ desc: p.name, qty: 1, pu: p.price }); }
+  renderItems();
+  render();
+}
+
+function addItem(desc="", qty=1, pu=0) {
+  items.push({ desc, qty, pu });
+  renderItems();
+  render();
+}
+
+function removeItem(i) {
+  items.splice(i, 1);
+  renderItems();
+  render();
+}
+
+function updateItem(i, field, val) {
+  items[i][field] = field === "desc" ? val : (parseFloat(val) || 0);
+  render();
+}
+
+function renderItems() {
+  const list = document.getElementById("items-list");
+  list.innerHTML = "";
+  items.forEach((item, i) => {
+    const row = document.createElement("div");
+    row.className = "item-row";
+    row.innerHTML = `
+      <input type="text" placeholder="Désignation" value="${item.desc}" oninput="updateItem(${i},'desc',this.value)">
+      <input type="number" min="0" step="1" value="${item.qty}" oninput="updateItem(${i},'qty',this.value)">
+      <input type="number" min="0" step="100" value="${item.pu}" oninput="updateItem(${i},'pu',this.value)">
+      <button class="del-item" onclick="removeItem(${i})">✕</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function fmtDate(d) {
+  if (!d) return "—";
+  const [y,m,day] = d.split("-");
+  return `${day}/${m}/${y}`;
+}
+
+function fmt(n) { return Math.round(n).toLocaleString("fr-SN") + " FCFA"; }
+
+function statusBadge(v) {
+  const map = { draft: ["status-draft","Brouillon"], sent: ["status-sent","Envoyée"], paid: ["status-paid","Payée"] };
+  const [cls, label] = map[v] || map.draft;
+  return `<span class="status-badge ${cls}">${label}</span>`;
+}
+
+function render() {
+  const num    = document.getElementById("inv-num").value || "FAC-001";
+  const status = document.getElementById("inv-status").value;
+  const date   = document.getElementById("inv-date").value;
+  const due    = document.getElementById("inv-due").value;
+  const sName  = document.getElementById("s-name").value || "Life at DAUST";
+  const sDetail= document.getElementById("s-detail").value;
+  const cName  = document.getElementById("c-name").value || "—";
+  const cDetail= document.getElementById("c-detail").value;
+  const disc   = parseFloat(document.getElementById("discount").value) || 0;
+  const tax    = parseFloat(document.getElementById("tax").value) || 0;
+  const notes  = document.getElementById("notes").value;
+
+  const subtotal = items.reduce((s,i) => s + i.qty * i.pu, 0);
+  const discAmt  = subtotal * disc / 100;
+  const afterDisc = subtotal - discAmt;
+  const taxAmt   = afterDisc * tax / 100;
+  const total    = afterDisc + taxAmt;
+
+  // Build items rows
+  const itemRows = items.filter(i => i.desc || i.qty || i.pu).map(i => {
+    const line = i.qty * i.pu;
+    return `<tr>
+      <td class="item-desc">${i.desc || "—"}</td>
+      <td>${i.qty}</td>
+      <td>${fmt(i.pu)}</td>
+      <td>${fmt(line)}</td>
+    </tr>`;
+  }).join("") || `<tr><td colspan="4" style="color:#C8C1B8;padding:20px 10px;text-align:center">Aucun article</td></tr>`;
+
+  // Totals rows
+  let totalsRows = `<tr><td>Sous-total</td><td>${fmt(subtotal)}</td></tr>`;
+  if (disc > 0) totalsRows += `<tr><td>Remise (${disc}%)</td><td style="color:#C02B2B">− ${fmt(discAmt)}</td></tr>`;
+  if (tax > 0) totalsRows += `<tr><td>TVA (${tax}%)</td><td>${fmt(taxAmt)}</td></tr>`;
+  totalsRows += `<tr class="total-row"><td><strong>Total</strong></td><td class="amount">${fmt(total)}</td></tr>`;
+
+  const notesSection = notes ? `
+    <div class="inv-notes">
+      <div class="notes-label">Notes</div>
+      <div class="notes-text">${notes}</div>
+    </div>` : "";
+
+  document.getElementById("invoice").innerHTML = `
+    <div class="inv-top">
+      <div class="inv-brand">
+        <div class="wordmark"><em>DAUST</em> Student Government</div>
+        <div class="tagline">Student Government Association</div>
+      </div>
+      <div class="inv-meta">
+        <div class="inv-label">FACTURE &nbsp;${statusBadge(status)}</div>
+        <table>
+          <tr><td>N°</td><td>${num}</td></tr>
+          <tr><td>Date</td><td>${fmtDate(date)}</td></tr>
+          <tr><td>Échéance</td><td>${fmtDate(due)}</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <hr class="inv-divider">
+
+    <div class="inv-parties">
+      <div>
+        <div class="party-label">Vendeur</div>
+        <div class="party-name">${sName}</div>
+        <div class="party-detail">${sDetail}</div>
+      </div>
+      <div>
+        <div class="party-label">Facturé à</div>
+        <div class="party-name">${cName}</div>
+        <div class="party-detail">${cDetail}</div>
+      </div>
+    </div>
+
+    <table class="inv-table">
+      <thead>
+        <tr>
+          <th style="text-align:left">Désignation</th>
+          <th>Qté</th>
+          <th>Prix unitaire</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>${itemRows}</tbody>
+    </table>
+
+    <div class="inv-totals">
+      <table class="totals-table"><tbody>${totalsRows}</tbody></table>
+    </div>
+
+    ${notesSection}
+
+    <div class="inv-footer">
+      <span>DAUST Student Government · DAUST, Dakar, Sénégal</span>
+      <span>${num} · ${fmtDate(date)}</span>
+    </div>
+  `;
+}
+
+function resetInvoice() {
+  if (!confirm("Créer une nouvelle facture ? Les données actuelles seront effacées.")) return;
+  document.getElementById("c-name").value = "";
+  document.getElementById("c-detail").value = "";
+  document.getElementById("notes").value = "Paiement à réception par cash ou Wave / Orange Money.";
+  document.getElementById("discount").value = 0;
+  document.getElementById("tax").value = 0;
+  document.getElementById("inv-status").value = "draft";
+
+  // Increment invoice number
+  const cur = document.getElementById("inv-num").value;
+  const match = cur.match(/(\D+)(\d+)$/);
+  if (match) document.getElementById("inv-num").value = match[1] + String(parseInt(match[2]) + 1).padStart(3, "0");
+
+  const today = new Date();
+  const due = new Date(); due.setDate(today.getDate() + 7);
+  document.getElementById("inv-date").value = today.toISOString().slice(0,10);
+  document.getElementById("inv-due").value = due.toISOString().slice(0,10);
+
+  items = [{ desc: "", qty: 1, pu: 0 }];
+  renderItems();
+  render();
+}
+
+renderItems();
+render();
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+async function savePDF() {
+  const btn = document.getElementById("btn-pdf");
+  const orig = btn.textContent;
+  btn.textContent = "Génération…";
+  btn.classList.add("loading");
+
+  const invoice = document.getElementById("invoice");
+  const canvas = await html2canvas(invoice, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff",
+    width: invoice.offsetWidth,
+    height: invoice.offsetHeight,
+  });
+
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({ unit: "px", format: "a4", orientation: "portrait" });
+
+  const pageW = pdf.internal.pageSize.getWidth();
+  const pageH = pdf.internal.pageSize.getHeight();
+  const imgW = canvas.width;
+  const imgH = canvas.height;
+  const ratio = Math.min(pageW / imgW, pageH / imgH);
+
+  const x = (pageW - imgW * ratio) / 2;
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, 0, imgW * ratio, imgH * ratio);
+
+  const num = document.getElementById("inv-num").value || "facture";
+  pdf.save(`${num}.pdf`);
+
+  btn.textContent = orig;
+  btn.classList.remove("loading");
+}
+</script>
+
+</body>
+</html>
