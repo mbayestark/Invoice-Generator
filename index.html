@@ -74,6 +74,7 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--accent); }
 .field textarea { resize: vertical; min-height: 60px; }
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
 
 /* LINE ITEMS */
 .items-header {
@@ -230,14 +231,12 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
     min-height: 100dvh;
   }
 
-  /* Header stays on top */
   .panel-header {
     padding: 14px 16px;
     padding-top: max(14px, env(safe-area-inset-top));
   }
   .panel-header h1 { font-size: 16px; }
 
-  /* Tab strip */
   .mob-tabs {
     display: flex;
     background: var(--ink);
@@ -254,7 +253,6 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
   }
   .mob-tab.active { color: #C8A882; border-bottom-color: #C8A882; }
 
-  /* Panel becomes full-width scrollable, hidden when preview tab active */
   .panel {
     position: static;
     height: auto;
@@ -265,7 +263,6 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
   .panel.mob-hidden { display: none; }
   .panel-body { padding: 16px; }
 
-  /* Footer sticks to bottom */
   .panel-footer {
     padding: 12px 16px;
     padding-bottom: max(12px, env(safe-area-inset-bottom));
@@ -275,7 +272,6 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
     z-index: 10;
   }
 
-  /* Preview area: full width, scaled invoice */
   .preview-area {
     padding: 16px 10px;
     padding-bottom: max(16px, env(safe-area-inset-bottom));
@@ -284,17 +280,12 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
   }
   .preview-area.mob-hidden { display: none; }
 
-  /* Scale invoice to fit screen */
   .invoice-scaler {
     width: 100%;
     display: flex;
     justify-content: center;
   }
-  .invoice {
-    transform-origin: top center;
-  }
 
-  /* Download button in preview tab */
   .mob-preview-btn {
     width: 100%;
     margin-top: 16px;
@@ -307,11 +298,14 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
     font-size: 14px;
     cursor: pointer;
   }
+
+  .row3 { grid-template-columns: 1fr 1fr; }
 }
 
 /* ─── VERY SMALL PHONES ──────────────────────────── */
 @media (max-width: 380px) {
   .row2 { grid-template-columns: 1fr; }
+  .row3 { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -327,8 +321,8 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 
     <!-- Mobile-only tab bar -->
     <div class="mob-tabs">
-      <button class="mob-tab active" id="tab-form" onclick="switchTab('form')">✏️ Formulaire</button>
-      <button class="mob-tab" id="tab-preview" onclick="switchTab('preview')">👁 Aperçu</button>
+      <button class="mob-tab active" id="tab-form" onclick="switchTab('form')">&#9998; Formulaire</button>
+      <button class="mob-tab" id="tab-preview" onclick="switchTab('preview')">&#128065; Aperçu</button>
     </div>
 
     <div class="panel-body">
@@ -379,7 +373,7 @@ studentgov@daust.edu.sn</textarea>
       </div>
       <div class="field">
         <label>Adresse / Détails</label>
-        <textarea id="c-detail" placeholder="Adresse, email, téléphone…"></textarea>
+        <textarea id="c-detail" placeholder="Adresse, email, téléphone…" oninput="render()"></textarea>
       </div>
 
       <!-- ARTICLES -->
@@ -394,9 +388,13 @@ studentgov@daust.edu.sn</textarea>
       <div id="items-list"></div>
       <button class="btn-add-item" onclick="addItem()">+ Ajouter un article</button>
 
-      <!-- TAX & NOTES -->
-      <div class="section-label">Taxe & Notes</div>
-      <div class="row2">
+      <!-- TAX, DELIVERY & NOTES -->
+      <div class="section-label">Livraison, Taxe & Notes</div>
+      <div class="row3">
+        <div class="field">
+          <label>Livraison (FCFA)</label>
+          <input type="number" id="delivery" value="0" min="0" step="100" oninput="render()">
+        </div>
         <div class="field">
           <label>Remise (%)</label>
           <input type="number" id="discount" value="0" min="0" max="100" step="1" oninput="render()">
@@ -423,13 +421,14 @@ studentgov@daust.edu.sn</textarea>
     <div class="invoice-scaler">
       <div class="invoice" id="invoice"></div>
     </div>
-    <!-- mobile download button inside preview -->
     <button class="mob-preview-btn" id="mob-dl-btn" onclick="savePDF()" style="display:none">Enregistrer PDF ↓</button>
   </div>
 
 </div>
 
 <script>
+const STORAGE_KEY = "daust.invoice.state";
+
 const CATALOG = [
   { name: "T-shirt",     price: 6500 },
   { name: "Shorts",      price: 11000 },
@@ -444,11 +443,56 @@ const CATALOG = [
 let items = [{ desc: "", qty: 1, pu: 0 }];
 let activeTab = "form";
 
-// Default dates
-const today = new Date();
-const due = new Date(); due.setDate(today.getDate() + 7);
-document.getElementById("inv-date").value = today.toISOString().slice(0,10);
-document.getElementById("inv-due").value  = due.toISOString().slice(0,10);
+// ── LOCALSTORAGE PERSISTENCE ──────────────────────
+function saveState() {
+  const state = {
+    invNum:   document.getElementById("inv-num").value,
+    status:   document.getElementById("inv-status").value,
+    date:     document.getElementById("inv-date").value,
+    due:      document.getElementById("inv-due").value,
+    sName:    document.getElementById("s-name").value,
+    sDetail:  document.getElementById("s-detail").value,
+    cName:    document.getElementById("c-name").value,
+    cDetail:  document.getElementById("c-detail").value,
+    delivery: document.getElementById("delivery").value,
+    discount: document.getElementById("discount").value,
+    tax:      document.getElementById("tax").value,
+    notes:    document.getElementById("notes").value,
+    items:    items,
+  };
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch(e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    document.getElementById("inv-num").value   = s.invNum   || "FAC-001";
+    document.getElementById("inv-status").value= s.status   || "draft";
+    document.getElementById("inv-date").value  = s.date     || "";
+    document.getElementById("inv-due").value   = s.due      || "";
+    document.getElementById("s-name").value    = s.sName    || "DAUST Student Government";
+    document.getElementById("s-detail").value  = s.sDetail  || "";
+    document.getElementById("c-name").value    = s.cName    || "";
+    document.getElementById("c-detail").value  = s.cDetail  || "";
+    document.getElementById("delivery").value  = s.delivery || 0;
+    document.getElementById("discount").value  = s.discount || 0;
+    document.getElementById("tax").value       = s.tax      || 0;
+    document.getElementById("notes").value     = s.notes !== undefined ? s.notes : "Paiement à réception par cash ou Wave / Orange Money.";
+    if (s.items && s.items.length) items = s.items;
+    return true;
+  } catch(e) { return false; }
+}
+
+// ── INIT ──────────────────────────────────────────
+const restored = loadState();
+if (!restored) {
+  const today = new Date();
+  const due = new Date(); due.setDate(today.getDate() + 7);
+  document.getElementById("inv-date").value = today.toISOString().slice(0,10);
+  document.getElementById("inv-due").value  = due.toISOString().slice(0,10);
+}
 
 // Preset chips
 const chips = document.getElementById("preset-chips");
@@ -460,7 +504,7 @@ CATALOG.forEach(p => {
   chips.appendChild(ch);
 });
 
-// ── TAB SWITCHING ──────────────────────────────────
+// ── TAB SWITCHING ─────────────────────────────────
 function switchTab(tab) {
   activeTab = tab;
   const panel       = document.getElementById("panel");
@@ -488,21 +532,19 @@ function switchTab(tab) {
   }
 }
 
-// ── SCALE INVOICE TO FIT MOBILE SCREEN ────────────
 function scaleInvoice() {
   const invoice = document.getElementById("invoice");
   const isMobile = window.innerWidth <= 768;
   if (!isMobile) { invoice.style.transform = ""; return; }
-  const availW = window.innerWidth - 20; // 10px padding each side
+  const availW = window.innerWidth - 20;
   const invoiceW = 794;
   const scale = Math.min(1, availW / invoiceW);
-  invoice.style.transform = `scale(${scale})`;
-  invoice.style.marginBottom = `${(invoice.offsetHeight * scale) - invoice.offsetHeight}px`;
+  invoice.style.transform = "scale(" + scale + ")";
+  invoice.style.marginBottom = ((invoice.offsetHeight * scale) - invoice.offsetHeight) + "px";
 }
 
-window.addEventListener("resize", () => {
+window.addEventListener("resize", function() {
   if (window.innerWidth > 768) {
-    // reset mobile state
     document.getElementById("panel").classList.remove("mob-hidden");
     document.getElementById("preview-area").classList.remove("mob-hidden");
     document.getElementById("invoice").style.transform = "";
@@ -512,9 +554,9 @@ window.addEventListener("resize", () => {
   }
 });
 
-// ── ITEMS ──────────────────────────────────────────
+// ── ITEMS ─────────────────────────────────────────
 function addPreset(p) {
-  const existing = items.find(i => i.desc === p.name);
+  var existing = items.find(function(i) { return i.desc === p.name; });
   if (existing) { existing.qty++; }
   else { items.push({ desc: p.name, qty: 1, pu: p.price }); }
   renderItems(); render();
@@ -536,130 +578,140 @@ function updateItem(i, field, val) {
 }
 
 function renderItems() {
-  const list = document.getElementById("items-list");
+  var list = document.getElementById("items-list");
   list.innerHTML = "";
-  items.forEach((item, i) => {
-    const row = document.createElement("div");
+  items.forEach(function(item, i) {
+    var row = document.createElement("div");
     row.className = "item-row";
-    row.innerHTML = `
-      <input type="text" placeholder="Désignation" value="${item.desc}" oninput="updateItem(${i},'desc',this.value)">
-      <input type="number" min="0" step="1" value="${item.qty}" oninput="updateItem(${i},'qty',this.value)">
-      <input type="number" min="0" step="100" value="${item.pu}" oninput="updateItem(${i},'pu',this.value)">
-      <button class="del-item" onclick="removeItem(${i})">✕</button>`;
+    row.innerHTML =
+      '<input type="text" placeholder="Désignation" value="' + item.desc + '" oninput="updateItem(' + i + ',\'desc\',this.value)">' +
+      '<input type="number" min="0" step="1" value="' + item.qty + '" oninput="updateItem(' + i + ',\'qty\',this.value)">' +
+      '<input type="number" min="0" step="100" value="' + item.pu + '" oninput="updateItem(' + i + ',\'pu\',this.value)">' +
+      '<button class="del-item" onclick="removeItem(' + i + ')">&#10005;</button>';
     list.appendChild(row);
   });
 }
 
-// ── RENDER ─────────────────────────────────────────
+// ── RENDER ────────────────────────────────────────
 function fmtDate(d) {
   if (!d) return "—";
-  const [y,m,day] = d.split("-");
-  return `${day}/${m}/${y}`;
+  var parts = d.split("-");
+  return parts[2] + "/" + parts[1] + "/" + parts[0];
 }
 function fmt(n) { return Math.round(n).toLocaleString("fr-SN") + " FCFA"; }
 function statusBadge(v) {
-  const map = { draft: ["status-draft","Brouillon"], sent: ["status-sent","Envoyée"], paid: ["status-paid","Payée"] };
-  const [cls, label] = map[v] || map.draft;
-  return `<span class="status-badge ${cls}">${label}</span>`;
+  var map = { draft: ["status-draft","Brouillon"], sent: ["status-sent","Envoyée"], paid: ["status-paid","Payée"] };
+  var pair = map[v] || map.draft;
+  return '<span class="status-badge ' + pair[0] + '">' + pair[1] + '</span>';
 }
 
 function render() {
-  const num     = document.getElementById("inv-num").value || "FAC-001";
-  const status  = document.getElementById("inv-status").value;
-  const date    = document.getElementById("inv-date").value;
-  const due     = document.getElementById("inv-due").value;
-  const sName   = document.getElementById("s-name").value || "DAUST Student Government";
-  const sDetail = document.getElementById("s-detail").value;
-  const cName   = document.getElementById("c-name").value || "—";
-  const cDetail = document.getElementById("c-detail").value;
-  const disc    = parseFloat(document.getElementById("discount").value) || 0;
-  const tax     = parseFloat(document.getElementById("tax").value) || 0;
-  const notes   = document.getElementById("notes").value;
+  var num      = document.getElementById("inv-num").value || "FAC-001";
+  var status   = document.getElementById("inv-status").value;
+  var date     = document.getElementById("inv-date").value;
+  var due      = document.getElementById("inv-due").value;
+  var sName    = document.getElementById("s-name").value || "DAUST Student Government";
+  var sDetail  = document.getElementById("s-detail").value;
+  var cName    = document.getElementById("c-name").value || "—";
+  var cDetail  = document.getElementById("c-detail").value;
+  var delivery = parseFloat(document.getElementById("delivery").value) || 0;
+  var disc     = parseFloat(document.getElementById("discount").value) || 0;
+  var tax      = parseFloat(document.getElementById("tax").value) || 0;
+  var notes    = document.getElementById("notes").value;
 
-  const subtotal  = items.reduce((s,i) => s + i.qty * i.pu, 0);
-  const discAmt   = subtotal * disc / 100;
-  const afterDisc = subtotal - discAmt;
-  const taxAmt    = afterDisc * tax / 100;
-  const total     = afterDisc + taxAmt;
+  var subtotal  = items.reduce(function(s,i) { return s + i.qty * i.pu; }, 0);
+  var discAmt   = subtotal * disc / 100;
+  var afterDisc = subtotal - discAmt;
+  var taxAmt    = afterDisc * tax / 100;
+  var total     = afterDisc + taxAmt + delivery;
 
-  const itemRows = items.filter(i => i.desc || i.qty || i.pu).map(i => `
-    <tr>
-      <td>${i.desc || "—"}</td>
-      <td>${i.qty}</td>
-      <td>${fmt(i.pu)}</td>
-      <td>${fmt(i.qty * i.pu)}</td>
-    </tr>`).join("") || `<tr><td colspan="4" style="color:#C8C1B8;padding:20px 10px;text-align:center">Aucun article</td></tr>`;
+  var itemRows = items.filter(function(i) { return i.desc || i.qty || i.pu; }).map(function(i) {
+    return '<tr>' +
+      '<td>' + (i.desc || "—") + '</td>' +
+      '<td>' + i.qty + '</td>' +
+      '<td>' + fmt(i.pu) + '</td>' +
+      '<td>' + fmt(i.qty * i.pu) + '</td>' +
+    '</tr>';
+  }).join("");
 
-  let totalsRows = `<tr><td>Sous-total</td><td>${fmt(subtotal)}</td></tr>`;
-  if (disc > 0) totalsRows += `<tr><td>Remise (${disc}%)</td><td style="color:#C02B2B">− ${fmt(discAmt)}</td></tr>`;
-  if (tax > 0)  totalsRows += `<tr><td>TVA (${tax}%)</td><td>${fmt(taxAmt)}</td></tr>`;
-  totalsRows += `<tr class="total-row"><td><strong>Total</strong></td><td class="amount">${fmt(total)}</td></tr>`;
+  if (!itemRows) {
+    itemRows = '<tr><td colspan="4" style="color:#C8C1B8;padding:20px 10px;text-align:center">Aucun article</td></tr>';
+  }
 
-  const notesSection = notes ? `
-    <div class="inv-notes">
-      <div class="notes-label">Notes</div>
-      <div class="notes-text">${notes}</div>
-    </div>` : "";
+  var totalsRows = '<tr><td>Sous-total</td><td>' + fmt(subtotal) + '</td></tr>';
+  if (disc > 0) totalsRows += '<tr><td>Remise (' + disc + '%)</td><td style="color:#C02B2B">− ' + fmt(discAmt) + '</td></tr>';
+  if (tax > 0)  totalsRows += '<tr><td>TVA (' + tax + '%)</td><td>' + fmt(taxAmt) + '</td></tr>';
+  if (delivery > 0) totalsRows += '<tr><td>Livraison</td><td>' + fmt(delivery) + '</td></tr>';
+  totalsRows += '<tr class="total-row"><td><strong>Total</strong></td><td class="amount">' + fmt(total) + '</td></tr>';
 
-  document.getElementById("invoice").innerHTML = `
-    <div class="inv-top">
-      <div class="inv-brand">
-        <div class="wordmark"><em>DAUST</em> Student Government</div>
-        <div class="tagline">Student Government Association</div>
-      </div>
-      <div class="inv-meta">
-        <div class="inv-label">FACTURE &nbsp;${statusBadge(status)}</div>
-        <table>
-          <tr><td>N°</td><td>${num}</td></tr>
-          <tr><td>Date</td><td>${fmtDate(date)}</td></tr>
-          <tr><td>Échéance</td><td>${fmtDate(due)}</td></tr>
-        </table>
-      </div>
-    </div>
-    <hr class="inv-divider">
-    <div class="inv-parties">
-      <div>
-        <div class="party-label">Vendeur</div>
-        <div class="party-name">${sName}</div>
-        <div class="party-detail">${sDetail}</div>
-      </div>
-      <div>
-        <div class="party-label">Facturé à</div>
-        <div class="party-name">${cName}</div>
-        <div class="party-detail">${cDetail}</div>
-      </div>
-    </div>
-    <table class="inv-table">
-      <thead><tr>
-        <th style="text-align:left">Désignation</th>
-        <th>Qté</th><th>Prix unitaire</th><th>Total</th>
-      </tr></thead>
-      <tbody>${itemRows}</tbody>
-    </table>
-    <div class="inv-totals">
-      <table class="totals-table"><tbody>${totalsRows}</tbody></table>
-    </div>
-    ${notesSection}
-    <div class="inv-footer">
-      <span>DAUST Student Government · DAUST, Dakar, Sénégal</span>
-      <span>${num} · ${fmtDate(date)}</span>
-    </div>`;
+  var notesSection = notes ?
+    '<div class="inv-notes">' +
+      '<div class="notes-label">Notes</div>' +
+      '<div class="notes-text">' + notes + '</div>' +
+    '</div>' : "";
+
+  document.getElementById("invoice").innerHTML =
+    '<div class="inv-top">' +
+      '<div class="inv-brand">' +
+        '<div class="wordmark"><em>DAUST</em> Student Government</div>' +
+        '<div class="tagline">Student Government Association</div>' +
+      '</div>' +
+      '<div class="inv-meta">' +
+        '<div class="inv-label">FACTURE &nbsp;' + statusBadge(status) + '</div>' +
+        '<table>' +
+          '<tr><td>N°</td><td>' + num + '</td></tr>' +
+          '<tr><td>Date</td><td>' + fmtDate(date) + '</td></tr>' +
+          '<tr><td>Échéance</td><td>' + fmtDate(due) + '</td></tr>' +
+        '</table>' +
+      '</div>' +
+    '</div>' +
+    '<hr class="inv-divider">' +
+    '<div class="inv-parties">' +
+      '<div>' +
+        '<div class="party-label">Vendeur</div>' +
+        '<div class="party-name">' + sName + '</div>' +
+        '<div class="party-detail">' + sDetail + '</div>' +
+      '</div>' +
+      '<div>' +
+        '<div class="party-label">Facturé à</div>' +
+        '<div class="party-name">' + cName + '</div>' +
+        '<div class="party-detail">' + cDetail + '</div>' +
+      '</div>' +
+    '</div>' +
+    '<table class="inv-table">' +
+      '<thead><tr>' +
+        '<th style="text-align:left">Désignation</th>' +
+        '<th>Qté</th><th>Prix unitaire</th><th>Total</th>' +
+      '</tr></thead>' +
+      '<tbody>' + itemRows + '</tbody>' +
+    '</table>' +
+    '<div class="inv-totals">' +
+      '<table class="totals-table"><tbody>' + totalsRows + '</tbody></table>' +
+    '</div>' +
+    notesSection +
+    '<div class="inv-footer">' +
+      '<span>DAUST Student Government · DAUST, Dakar, Sénégal</span>' +
+      '<span>' + num + ' · ' + fmtDate(date) + '</span>' +
+    '</div>';
 
   if (activeTab === "preview" && window.innerWidth <= 768) scaleInvoice();
+
+  saveState();
 }
 
 function resetInvoice() {
   if (!confirm("Créer une nouvelle facture ? Les données actuelles seront effacées.")) return;
-  document.getElementById("c-name").value   = "";
-  document.getElementById("c-detail").value = "";
-  document.getElementById("notes").value    = "Paiement à réception par cash ou Wave / Orange Money.";
-  document.getElementById("discount").value = 0;
-  document.getElementById("tax").value      = 0;
+  document.getElementById("c-name").value     = "";
+  document.getElementById("c-detail").value   = "";
+  document.getElementById("notes").value      = "Paiement à réception par cash ou Wave / Orange Money.";
+  document.getElementById("delivery").value   = 0;
+  document.getElementById("discount").value   = 0;
+  document.getElementById("tax").value        = 0;
   document.getElementById("inv-status").value = "draft";
-  const cur = document.getElementById("inv-num").value;
-  const match = cur.match(/(\D+)(\d+)$/);
+  var cur = document.getElementById("inv-num").value;
+  var match = cur.match(/(\D+)(\d+)$/);
   if (match) document.getElementById("inv-num").value = match[1] + String(parseInt(match[2]) + 1).padStart(3,"0");
-  const t = new Date(), d = new Date(); d.setDate(t.getDate()+7);
+  var t = new Date(), d = new Date(); d.setDate(t.getDate()+7);
   document.getElementById("inv-date").value = t.toISOString().slice(0,10);
   document.getElementById("inv-due").value  = d.toISOString().slice(0,10);
   items = [{ desc:"", qty:1, pu:0 }];
@@ -674,40 +726,77 @@ render();
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 async function savePDF() {
-  const btn1 = document.getElementById("btn-pdf");
-  const btn2 = document.getElementById("mob-dl-btn");
-  const orig = btn1.textContent;
+  if (!window.html2canvas || !window.jspdf) {
+    alert("Les bibliothèques PDF n'ont pas pu se charger. Vérifiez votre connexion internet.");
+    return;
+  }
+
+  var btn1 = document.getElementById("btn-pdf");
+  var btn2 = document.getElementById("mob-dl-btn");
+  var orig = btn1.textContent;
   btn1.textContent = "Génération…";
   btn1.classList.add("loading");
   if (btn2) { btn2.textContent = "Génération…"; btn2.disabled = true; }
 
-  // Temporarily reset transform for capture
-  const invoice = document.getElementById("invoice");
-  const savedTransform = invoice.style.transform;
-  const savedMargin = invoice.style.marginBottom;
+  var invoice = document.getElementById("invoice");
+  var savedTransform = invoice.style.transform;
+  var savedMargin = invoice.style.marginBottom;
   invoice.style.transform = "";
   invoice.style.marginBottom = "";
 
-  await new Promise(r => setTimeout(r, 100));
+  await new Promise(function(r) { setTimeout(r, 100); });
 
-  const canvas = await html2canvas(invoice, {
-    scale: 2, useCORS: true, backgroundColor: "#ffffff",
-    width: invoice.offsetWidth, height: invoice.offsetHeight,
-  });
+  try {
+    var canvas = await html2canvas(invoice, {
+      scale: 2, useCORS: true, backgroundColor: "#ffffff",
+      width: invoice.offsetWidth, height: invoice.offsetHeight,
+    });
 
-  invoice.style.transform    = savedTransform;
-  invoice.style.marginBottom = savedMargin;
+    invoice.style.transform    = savedTransform;
+    invoice.style.marginBottom = savedMargin;
 
-  const { jsPDF } = window.jspdf;
-  const pdf = new jsPDF({ unit: "px", format: "a4", orientation: "portrait" });
-  const pageW = pdf.internal.pageSize.getWidth();
-  const pageH = pdf.internal.pageSize.getHeight();
-  const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
-  const x = (pageW - canvas.width * ratio) / 2;
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, 0, canvas.width * ratio, canvas.height * ratio);
+    var jsPDF = window.jspdf.jsPDF;
+    var pdf = new jsPDF({ unit: "px", format: "a4", orientation: "portrait" });
+    var pageW = pdf.internal.pageSize.getWidth();
+    var pageH = pdf.internal.pageSize.getHeight();
 
-  const num = document.getElementById("inv-num").value || "facture";
-  pdf.save(`${num}.pdf`);
+    var scaledW = pageW;
+    var scaledH = canvas.height * (pageW / canvas.width);
+
+    if (scaledH <= pageH) {
+      var x = (pageW - scaledW) / 2;
+      pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, 0, scaledW, scaledH);
+    } else {
+      var sliceHeightPx = Math.floor(canvas.height * (pageH / scaledH));
+      var yOffset = 0;
+      var pageNum = 0;
+
+      while (yOffset < canvas.height) {
+        var thisSlice = Math.min(sliceHeightPx, canvas.height - yOffset);
+
+        var sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvas.width;
+        sliceCanvas.height = thisSlice;
+        var ctx = sliceCanvas.getContext("2d");
+        ctx.drawImage(canvas, 0, yOffset, canvas.width, thisSlice, 0, 0, canvas.width, thisSlice);
+
+        var sliceScaledH = thisSlice * (pageW / canvas.width);
+
+        if (pageNum > 0) pdf.addPage();
+        pdf.addImage(sliceCanvas.toDataURL("image/png"), "PNG", 0, 0, pageW, sliceScaledH);
+
+        yOffset += thisSlice;
+        pageNum++;
+      }
+    }
+
+    var num = document.getElementById("inv-num").value || "facture";
+    pdf.save(num + ".pdf");
+  } catch(e) {
+    invoice.style.transform    = savedTransform;
+    invoice.style.marginBottom = savedMargin;
+    alert("Erreur lors de la génération du PDF. Réessayez.");
+  }
 
   btn1.textContent = orig;
   btn1.classList.remove("loading");
