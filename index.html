@@ -2,7 +2,10 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Facture DAUST">
 <title>Facture — DAUST Student Government</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -25,10 +28,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--ink); font-size: 13px; min-height: 100vh; }
 
-/* LAYOUT */
+/* ─── DESKTOP LAYOUT ─────────────────────────────── */
 .app { display: grid; grid-template-columns: 380px 1fr; min-height: 100vh; }
 
-/* LEFT PANEL */
 .panel {
   background: var(--surface);
   border-right: 1px solid var(--border);
@@ -45,36 +47,29 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
   padding: 18px 20px;
   flex-shrink: 0;
 }
-.panel-header h1 { font-family: 'IBM Plex Sans', sans-serif; font-size: 18px; font-weight: 200; }
+.panel-header h1 { font-size: 18px; font-weight: 200; }
 .panel-header h1 em { font-style: italic; color: #C8A882; }
 .panel-header span { font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: #888; display: block; margin-top: 2px; }
+
+/* mobile tab strip — hidden on desktop */
+.mob-tabs { display: none; }
 
 .panel-body { padding: 20px; flex: 1; overflow-y: auto; }
 
 .section-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: var(--ink3);
-  margin-bottom: 10px;
-  margin-top: 20px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border);
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--ink3); margin-bottom: 10px; margin-top: 20px;
+  padding-bottom: 6px; border-bottom: 1px solid var(--border);
 }
 .section-label:first-child { margin-top: 0; }
 
 .field { margin-bottom: 10px; }
 .field label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink3); display: block; margin-bottom: 4px; }
 .field input, .field textarea, .field select {
-  width: 100%;
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 7px 10px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 12px;
-  background: var(--bg);
-  color: var(--ink);
-  transition: border-color 0.15s;
+  width: 100%; border: 1px solid var(--border); border-radius: var(--r);
+  padding: 7px 10px; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px;
+  background: var(--bg); color: var(--ink); transition: border-color 0.15s;
+  -webkit-appearance: none; appearance: none;
 }
 .field input:focus, .field textarea:focus, .field select:focus { outline: none; border-color: var(--accent); }
 .field textarea { resize: vertical; min-height: 60px; }
@@ -82,111 +77,61 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 
 /* LINE ITEMS */
 .items-header {
-  display: grid;
-  grid-template-columns: 1fr 52px 72px 24px;
-  gap: 4px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink3);
-  padding: 0 0 6px;
-  margin-bottom: 4px;
+  display: grid; grid-template-columns: 1fr 52px 72px 24px; gap: 4px;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--ink3); padding: 0 0 6px; margin-bottom: 4px;
   border-bottom: 1px solid var(--border);
 }
 .item-row {
-  display: grid;
-  grid-template-columns: 1fr 52px 72px 24px;
-  gap: 4px;
-  margin-bottom: 6px;
-  align-items: center;
+  display: grid; grid-template-columns: 1fr 52px 72px 24px;
+  gap: 4px; margin-bottom: 6px; align-items: center;
 }
 .item-row input {
-  border: 1px solid var(--border);
-  border-radius: var(--r);
-  padding: 6px 7px;
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 12px;
-  background: var(--bg);
-  color: var(--ink);
-  width: 100%;
-  transition: border-color 0.15s;
+  border: 1px solid var(--border); border-radius: var(--r);
+  padding: 6px 7px; font-family: 'IBM Plex Sans', sans-serif; font-size: 12px;
+  background: var(--bg); color: var(--ink); width: 100%;
+  transition: border-color 0.15s; -webkit-appearance: none;
 }
 .item-row input:focus { outline: none; border-color: var(--accent); }
 .item-row input[type=number] { text-align: right; }
 .del-item {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--ink3);
-  font-size: 14px;
-  padding: 4px;
-  border-radius: var(--r);
-  line-height: 1;
-  text-align: center;
+  background: none; border: none; cursor: pointer; color: var(--ink3);
+  font-size: 14px; padding: 4px; border-radius: var(--r); line-height: 1; text-align: center;
 }
 .del-item:hover { color: #C02B2B; background: #FAE0E0; }
 
 .btn-add-item {
-  width: 100%;
-  padding: 7px;
-  background: none;
-  border: 1px dashed var(--border-strong);
-  border-radius: var(--r);
-  color: var(--ink2);
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 12px;
-  cursor: pointer;
-  margin-top: 4px;
-  transition: all 0.15s;
+  width: 100%; padding: 7px; background: none;
+  border: 1px dashed var(--border-strong); border-radius: var(--r);
+  color: var(--ink2); font-family: 'IBM Plex Sans', sans-serif; font-size: 12px;
+  cursor: pointer; margin-top: 4px; transition: all 0.15s;
 }
 .btn-add-item:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
 .preset-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
 .chip {
-  padding: 3px 9px;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 99px;
-  font-size: 11px;
-  color: var(--ink2);
-  cursor: pointer;
-  transition: all 0.12s;
+  padding: 3px 9px; background: var(--bg); border: 1px solid var(--border);
+  border-radius: 99px; font-size: 11px; color: var(--ink2); cursor: pointer; transition: all 0.12s;
 }
-.chip:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+.chip:hover, .chip:active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
 .panel-footer {
-  padding: 16px 20px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  gap: 8px;
-  flex-shrink: 0;
+  padding: 16px 20px; border-top: 1px solid var(--border);
+  display: flex; gap: 8px; flex-shrink: 0;
 }
 .btn-print {
-  flex: 1;
-  padding: 10px;
-  background: var(--ink);
-  color: var(--bg);
-  border: none;
-  border-radius: var(--r);
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s;
+  flex: 1; padding: 10px; background: var(--ink); color: var(--bg); border: none;
+  border-radius: var(--r); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; cursor: pointer;
 }
 .btn-print:hover { background: #333; }
 .btn-new {
-  padding: 10px 14px;
-  background: none;
-  border: 1px solid var(--border-strong);
-  border-radius: var(--r);
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 12px;
-  color: var(--ink2);
-  cursor: pointer;
+  padding: 10px 14px; background: none; border: 1px solid var(--border-strong);
+  border-radius: var(--r); font-family: 'IBM Plex Sans', sans-serif; font-size: 12px;
+  color: var(--ink2); cursor: pointer;
 }
 .btn-new:hover { background: var(--bg); }
 
-/* RIGHT: PREVIEW */
+/* ─── PREVIEW AREA ───────────────────────────────── */
 .preview-area {
   background: #E8E4DD;
   display: flex;
@@ -196,7 +141,7 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
   overflow-y: auto;
 }
 
-/* INVOICE DOCUMENT */
+/* ─── INVOICE DOCUMENT ───────────────────────────── */
 .invoice {
   background: #fff;
   width: 794px;
@@ -207,27 +152,16 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
   font-size: 12px;
   color: #1A1714;
   position: relative;
+  transform-origin: top center;
 }
 
-.inv-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 44px;
-}
-.inv-brand {}
-.inv-brand .wordmark {
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 28px;
-  font-weight: 200;
-  color: #1A1714;
-  line-height: 1;
-}
+.inv-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 44px; }
+.inv-brand .wordmark { font-size: 28px; font-weight: 200; color: #1A1714; line-height: 1; }
 .inv-brand .wordmark em { font-style: italic; color: var(--accent); }
 .inv-brand .tagline { font-size: 10px; color: #B0AAA3; margin-top: 4px; letter-spacing: 0.1em; text-transform: uppercase; }
 
 .inv-meta { text-align: right; }
-.inv-meta .inv-label { font-family: 'IBM Plex Sans', sans-serif; font-size: 22px; font-weight: 200; color: #1A1714; margin-bottom: 8px; }
+.inv-meta .inv-label { font-size: 22px; font-weight: 200; color: #1A1714; margin-bottom: 8px; }
 .inv-meta table { font-size: 11px; margin-left: auto; }
 .inv-meta td { padding: 2px 0 2px 16px; }
 .inv-meta td:first-child { color: #B0AAA3; text-align: right; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -237,103 +171,167 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 
 .inv-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 36px; }
 .party-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #B0AAA3; margin-bottom: 8px; }
-.party-name { font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; font-weight: 400; margin-bottom: 4px; }
+.party-name { font-size: 16px; font-weight: 400; margin-bottom: 4px; }
 .party-detail { font-size: 11px; color: #6B6560; line-height: 1.7; white-space: pre-line; }
 
-/* ITEMS TABLE */
-.inv-table { width: 100%; border-collapse: collapse; margin-bottom: 0; }
+.inv-table { width: 100%; border-collapse: collapse; }
 .inv-table thead th {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #B0AAA3;
-  padding: 8px 10px;
-  border-bottom: 1px solid #E0DAD2;
-  font-weight: 400;
-  text-align: right;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
+  color: #B0AAA3; padding: 8px 10px; border-bottom: 1px solid #E0DAD2;
+  font-weight: 400; text-align: right;
 }
 .inv-table thead th:first-child { text-align: left; }
 .inv-table tbody td {
-  padding: 11px 10px;
-  border-bottom: 1px solid #F0EDE8;
-  color: #1A1714;
-  vertical-align: middle;
-  text-align: right;
+  padding: 11px 10px; border-bottom: 1px solid #F0EDE8;
+  color: #1A1714; vertical-align: middle; text-align: right;
 }
 .inv-table tbody td:first-child { text-align: left; }
 .inv-table tbody tr:last-child td { border-bottom: none; }
-.item-desc { font-size: 12px; }
-.item-desc-sub { font-size: 10px; color: #B0AAA3; margin-top: 1px; }
 
 .inv-totals {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0;
-  border-top: 1px solid #E0DAD2;
-  padding-top: 16px;
+  display: flex; justify-content: flex-end;
+  border-top: 1px solid #E0DAD2; padding-top: 16px;
 }
 .totals-table { font-size: 12px; }
 .totals-table td { padding: 4px 0 4px 32px; }
 .totals-table td:first-child { color: #B0AAA3; text-align: right; text-transform: uppercase; letter-spacing: 0.06em; }
-.totals-table .total-row td { border-top: 1px solid #E0DAD2; padding-top: 10px; margin-top: 8px; }
+.totals-table .total-row td { border-top: 1px solid #E0DAD2; padding-top: 10px; }
 .totals-table .total-row td:first-child { color: #1A1714; }
-.totals-table .total-row .amount {
-  font-family: 'IBM Plex Sans', sans-serif;
-  font-size: 20px;
-  font-weight: 400;
-  color: var(--accent);
-}
+.totals-table .total-row .amount { font-size: 20px; font-weight: 400; color: var(--accent); }
 
-.inv-notes {
-  margin-top: 40px;
-  padding-top: 24px;
-  border-top: 1px solid #F0EDE8;
-}
+.inv-notes { margin-top: 40px; padding-top: 24px; border-top: 1px solid #F0EDE8; }
 .inv-notes .notes-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #B0AAA3; margin-bottom: 8px; }
 .inv-notes .notes-text { font-size: 11px; color: #6B6560; line-height: 1.7; white-space: pre-line; }
 
 .inv-footer {
-  position: absolute;
-  bottom: 40px;
-  left: 60px;
-  right: 60px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 10px;
-  color: #C8C1B8;
-  border-top: 1px solid #F0EDE8;
-  padding-top: 12px;
+  position: absolute; bottom: 40px; left: 60px; right: 60px;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 10px; color: #C8C1B8; border-top: 1px solid #F0EDE8; padding-top: 12px;
 }
 
-/* STATUS BADGE */
 .status-badge {
-  display: inline-block;
-  padding: 3px 10px;
-  border-radius: 99px;
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  display: inline-block; padding: 3px 10px; border-radius: 99px;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em;
 }
 .status-draft { background: #F0EDE8; color: #B0AAA3; }
 .status-sent  { background: #EAF3DE; color: #3B6D11; }
 .status-paid  { background: #D6F0E4; color: #1D7A50; }
 
 #btn-pdf.loading { opacity: 0.6; pointer-events: none; }
+
+/* ─── MOBILE ─────────────────────────────────────── */
+@media (max-width: 768px) {
+  body { background: var(--surface); }
+
+  .app {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Header stays on top */
+  .panel-header {
+    padding: 14px 16px;
+    padding-top: max(14px, env(safe-area-inset-top));
+  }
+  .panel-header h1 { font-size: 16px; }
+
+  /* Tab strip */
+  .mob-tabs {
+    display: flex;
+    background: var(--ink);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    flex-shrink: 0;
+  }
+  .mob-tab {
+    flex: 1; padding: 10px; text-align: center;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: #888; background: none; border: none;
+    border-bottom: 2px solid transparent;
+    font-family: 'IBM Plex Sans', sans-serif;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .mob-tab.active { color: #C8A882; border-bottom-color: #C8A882; }
+
+  /* Panel becomes full-width scrollable, hidden when preview tab active */
+  .panel {
+    position: static;
+    height: auto;
+    border-right: none;
+    overflow: visible;
+    flex: 1;
+  }
+  .panel.mob-hidden { display: none; }
+  .panel-body { padding: 16px; }
+
+  /* Footer sticks to bottom */
+  .panel-footer {
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    position: sticky;
+    bottom: 0;
+    background: var(--surface);
+    z-index: 10;
+  }
+
+  /* Preview area: full width, scaled invoice */
+  .preview-area {
+    padding: 16px 10px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    overflow-x: hidden;
+    align-items: flex-start;
+  }
+  .preview-area.mob-hidden { display: none; }
+
+  /* Scale invoice to fit screen */
+  .invoice-scaler {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+  .invoice {
+    transform-origin: top center;
+  }
+
+  /* Download button in preview tab */
+  .mob-preview-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--r);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+  }
+}
+
+/* ─── VERY SMALL PHONES ──────────────────────────── */
+@media (max-width: 380px) {
+  .row2 { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
 <div class="app">
 
-  <!-- LEFT PANEL -->
-  <aside class="panel">
+  <!-- PANEL (form) -->
+  <aside class="panel" id="panel">
     <div class="panel-header">
       <h1><em>DAUST</em> Student Government</h1>
       <span>Générateur de factures</span>
     </div>
 
-    <div class="panel-body">
+    <!-- Mobile-only tab bar -->
+    <div class="mob-tabs">
+      <button class="mob-tab active" id="tab-form" onclick="switchTab('form')">✏️ Formulaire</button>
+      <button class="mob-tab" id="tab-preview" onclick="switchTab('preview')">👁 Aperçu</button>
+    </div>
 
+    <div class="panel-body">
       <!-- META -->
       <div class="section-label">Facture</div>
       <div class="row2">
@@ -381,7 +379,7 @@ studentgov@daust.edu.sn</textarea>
       </div>
       <div class="field">
         <label>Adresse / Détails</label>
-        <textarea id="c-detail" placeholder="Adresse, email, téléphone…" oninput="render()"></textarea>
+        <textarea id="c-detail" placeholder="Adresse, email, téléphone…"></textarea>
       </div>
 
       <!-- ARTICLES -->
@@ -410,7 +408,7 @@ studentgov@daust.edu.sn</textarea>
       </div>
       <div class="field">
         <label>Notes / Conditions</label>
-        <textarea id="notes" placeholder="Conditions de paiement, notes…" oninput="render()">Paiement à réception par cash ou Wave / Orange Money.</textarea>
+        <textarea id="notes" oninput="render()">Paiement à réception par cash ou Wave / Orange Money.</textarea>
       </div>
     </div>
 
@@ -420,11 +418,13 @@ studentgov@daust.edu.sn</textarea>
     </div>
   </aside>
 
-  <!-- RIGHT: PREVIEW -->
-  <div class="preview-area">
-    <div class="invoice" id="invoice">
-      <!-- rendered by JS -->
+  <!-- PREVIEW -->
+  <div class="preview-area mob-hidden" id="preview-area">
+    <div class="invoice-scaler">
+      <div class="invoice" id="invoice"></div>
     </div>
+    <!-- mobile download button inside preview -->
+    <button class="mob-preview-btn" id="mob-dl-btn" onclick="savePDF()" style="display:none">Enregistrer PDF ↓</button>
   </div>
 
 </div>
@@ -442,14 +442,15 @@ const CATALOG = [
 ];
 
 let items = [{ desc: "", qty: 1, pu: 0 }];
+let activeTab = "form";
 
-// Set default dates
+// Default dates
 const today = new Date();
 const due = new Date(); due.setDate(today.getDate() + 7);
 document.getElementById("inv-date").value = today.toISOString().slice(0,10);
-document.getElementById("inv-due").value = due.toISOString().slice(0,10);
+document.getElementById("inv-due").value  = due.toISOString().slice(0,10);
 
-// Build preset chips
+// Preset chips
 const chips = document.getElementById("preset-chips");
 CATALOG.forEach(p => {
   const ch = document.createElement("span");
@@ -459,24 +460,74 @@ CATALOG.forEach(p => {
   chips.appendChild(ch);
 });
 
+// ── TAB SWITCHING ──────────────────────────────────
+function switchTab(tab) {
+  activeTab = tab;
+  const panel       = document.getElementById("panel");
+  const previewArea = document.getElementById("preview-area");
+  const tabForm     = document.getElementById("tab-form");
+  const tabPreview  = document.getElementById("tab-preview");
+  const mobDl       = document.getElementById("mob-dl-btn");
+  const isMobile    = window.innerWidth <= 768;
+
+  if (!isMobile) return;
+
+  if (tab === "form") {
+    panel.classList.remove("mob-hidden");
+    previewArea.classList.add("mob-hidden");
+    tabForm.classList.add("active");
+    tabPreview.classList.remove("active");
+    mobDl.style.display = "none";
+  } else {
+    panel.classList.add("mob-hidden");
+    previewArea.classList.remove("mob-hidden");
+    tabPreview.classList.add("active");
+    tabForm.classList.remove("active");
+    mobDl.style.display = "block";
+    scaleInvoice();
+  }
+}
+
+// ── SCALE INVOICE TO FIT MOBILE SCREEN ────────────
+function scaleInvoice() {
+  const invoice = document.getElementById("invoice");
+  const isMobile = window.innerWidth <= 768;
+  if (!isMobile) { invoice.style.transform = ""; return; }
+  const availW = window.innerWidth - 20; // 10px padding each side
+  const invoiceW = 794;
+  const scale = Math.min(1, availW / invoiceW);
+  invoice.style.transform = `scale(${scale})`;
+  invoice.style.marginBottom = `${(invoice.offsetHeight * scale) - invoice.offsetHeight}px`;
+}
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth > 768) {
+    // reset mobile state
+    document.getElementById("panel").classList.remove("mob-hidden");
+    document.getElementById("preview-area").classList.remove("mob-hidden");
+    document.getElementById("invoice").style.transform = "";
+    document.getElementById("invoice").style.marginBottom = "";
+  } else {
+    switchTab(activeTab);
+  }
+});
+
+// ── ITEMS ──────────────────────────────────────────
 function addPreset(p) {
   const existing = items.find(i => i.desc === p.name);
   if (existing) { existing.qty++; }
   else { items.push({ desc: p.name, qty: 1, pu: p.price }); }
-  renderItems();
-  render();
+  renderItems(); render();
 }
 
-function addItem(desc="", qty=1, pu=0) {
-  items.push({ desc, qty, pu });
-  renderItems();
-  render();
+function addItem() {
+  items.push({ desc: "", qty: 1, pu: 0 });
+  renderItems(); render();
 }
 
 function removeItem(i) {
   items.splice(i, 1);
-  renderItems();
-  render();
+  renderItems(); render();
 }
 
 function updateItem(i, field, val) {
@@ -494,20 +545,18 @@ function renderItems() {
       <input type="text" placeholder="Désignation" value="${item.desc}" oninput="updateItem(${i},'desc',this.value)">
       <input type="number" min="0" step="1" value="${item.qty}" oninput="updateItem(${i},'qty',this.value)">
       <input type="number" min="0" step="100" value="${item.pu}" oninput="updateItem(${i},'pu',this.value)">
-      <button class="del-item" onclick="removeItem(${i})">✕</button>
-    `;
+      <button class="del-item" onclick="removeItem(${i})">✕</button>`;
     list.appendChild(row);
   });
 }
 
+// ── RENDER ─────────────────────────────────────────
 function fmtDate(d) {
   if (!d) return "—";
   const [y,m,day] = d.split("-");
   return `${day}/${m}/${y}`;
 }
-
 function fmt(n) { return Math.round(n).toLocaleString("fr-SN") + " FCFA"; }
-
 function statusBadge(v) {
   const map = { draft: ["status-draft","Brouillon"], sent: ["status-sent","Envoyée"], paid: ["status-paid","Payée"] };
   const [cls, label] = map[v] || map.draft;
@@ -515,39 +564,35 @@ function statusBadge(v) {
 }
 
 function render() {
-  const num    = document.getElementById("inv-num").value || "FAC-001";
-  const status = document.getElementById("inv-status").value;
-  const date   = document.getElementById("inv-date").value;
-  const due    = document.getElementById("inv-due").value;
-  const sName  = document.getElementById("s-name").value || "Life at DAUST";
-  const sDetail= document.getElementById("s-detail").value;
-  const cName  = document.getElementById("c-name").value || "—";
-  const cDetail= document.getElementById("c-detail").value;
-  const disc   = parseFloat(document.getElementById("discount").value) || 0;
-  const tax    = parseFloat(document.getElementById("tax").value) || 0;
-  const notes  = document.getElementById("notes").value;
+  const num     = document.getElementById("inv-num").value || "FAC-001";
+  const status  = document.getElementById("inv-status").value;
+  const date    = document.getElementById("inv-date").value;
+  const due     = document.getElementById("inv-due").value;
+  const sName   = document.getElementById("s-name").value || "DAUST Student Government";
+  const sDetail = document.getElementById("s-detail").value;
+  const cName   = document.getElementById("c-name").value || "—";
+  const cDetail = document.getElementById("c-detail").value;
+  const disc    = parseFloat(document.getElementById("discount").value) || 0;
+  const tax     = parseFloat(document.getElementById("tax").value) || 0;
+  const notes   = document.getElementById("notes").value;
 
-  const subtotal = items.reduce((s,i) => s + i.qty * i.pu, 0);
-  const discAmt  = subtotal * disc / 100;
+  const subtotal  = items.reduce((s,i) => s + i.qty * i.pu, 0);
+  const discAmt   = subtotal * disc / 100;
   const afterDisc = subtotal - discAmt;
-  const taxAmt   = afterDisc * tax / 100;
-  const total    = afterDisc + taxAmt;
+  const taxAmt    = afterDisc * tax / 100;
+  const total     = afterDisc + taxAmt;
 
-  // Build items rows
-  const itemRows = items.filter(i => i.desc || i.qty || i.pu).map(i => {
-    const line = i.qty * i.pu;
-    return `<tr>
-      <td class="item-desc">${i.desc || "—"}</td>
+  const itemRows = items.filter(i => i.desc || i.qty || i.pu).map(i => `
+    <tr>
+      <td>${i.desc || "—"}</td>
       <td>${i.qty}</td>
       <td>${fmt(i.pu)}</td>
-      <td>${fmt(line)}</td>
-    </tr>`;
-  }).join("") || `<tr><td colspan="4" style="color:#C8C1B8;padding:20px 10px;text-align:center">Aucun article</td></tr>`;
+      <td>${fmt(i.qty * i.pu)}</td>
+    </tr>`).join("") || `<tr><td colspan="4" style="color:#C8C1B8;padding:20px 10px;text-align:center">Aucun article</td></tr>`;
 
-  // Totals rows
   let totalsRows = `<tr><td>Sous-total</td><td>${fmt(subtotal)}</td></tr>`;
   if (disc > 0) totalsRows += `<tr><td>Remise (${disc}%)</td><td style="color:#C02B2B">− ${fmt(discAmt)}</td></tr>`;
-  if (tax > 0) totalsRows += `<tr><td>TVA (${tax}%)</td><td>${fmt(taxAmt)}</td></tr>`;
+  if (tax > 0)  totalsRows += `<tr><td>TVA (${tax}%)</td><td>${fmt(taxAmt)}</td></tr>`;
   totalsRows += `<tr class="total-row"><td><strong>Total</strong></td><td class="amount">${fmt(total)}</td></tr>`;
 
   const notesSection = notes ? `
@@ -571,9 +616,7 @@ function render() {
         </table>
       </div>
     </div>
-
     <hr class="inv-divider">
-
     <div class="inv-parties">
       <div>
         <div class="party-label">Vendeur</div>
@@ -586,96 +629,90 @@ function render() {
         <div class="party-detail">${cDetail}</div>
       </div>
     </div>
-
     <table class="inv-table">
-      <thead>
-        <tr>
-          <th style="text-align:left">Désignation</th>
-          <th>Qté</th>
-          <th>Prix unitaire</th>
-          <th>Total</th>
-        </tr>
-      </thead>
+      <thead><tr>
+        <th style="text-align:left">Désignation</th>
+        <th>Qté</th><th>Prix unitaire</th><th>Total</th>
+      </tr></thead>
       <tbody>${itemRows}</tbody>
     </table>
-
     <div class="inv-totals">
       <table class="totals-table"><tbody>${totalsRows}</tbody></table>
     </div>
-
     ${notesSection}
-
     <div class="inv-footer">
       <span>DAUST Student Government · DAUST, Dakar, Sénégal</span>
       <span>${num} · ${fmtDate(date)}</span>
-    </div>
-  `;
+    </div>`;
+
+  if (activeTab === "preview" && window.innerWidth <= 768) scaleInvoice();
 }
 
 function resetInvoice() {
   if (!confirm("Créer une nouvelle facture ? Les données actuelles seront effacées.")) return;
-  document.getElementById("c-name").value = "";
+  document.getElementById("c-name").value   = "";
   document.getElementById("c-detail").value = "";
-  document.getElementById("notes").value = "Paiement à réception par cash ou Wave / Orange Money.";
+  document.getElementById("notes").value    = "Paiement à réception par cash ou Wave / Orange Money.";
   document.getElementById("discount").value = 0;
-  document.getElementById("tax").value = 0;
+  document.getElementById("tax").value      = 0;
   document.getElementById("inv-status").value = "draft";
-
-  // Increment invoice number
   const cur = document.getElementById("inv-num").value;
   const match = cur.match(/(\D+)(\d+)$/);
-  if (match) document.getElementById("inv-num").value = match[1] + String(parseInt(match[2]) + 1).padStart(3, "0");
-
-  const today = new Date();
-  const due = new Date(); due.setDate(today.getDate() + 7);
-  document.getElementById("inv-date").value = today.toISOString().slice(0,10);
-  document.getElementById("inv-due").value = due.toISOString().slice(0,10);
-
-  items = [{ desc: "", qty: 1, pu: 0 }];
-  renderItems();
-  render();
+  if (match) document.getElementById("inv-num").value = match[1] + String(parseInt(match[2]) + 1).padStart(3,"0");
+  const t = new Date(), d = new Date(); d.setDate(t.getDate()+7);
+  document.getElementById("inv-date").value = t.toISOString().slice(0,10);
+  document.getElementById("inv-due").value  = d.toISOString().slice(0,10);
+  items = [{ desc:"", qty:1, pu:0 }];
+  renderItems(); render();
 }
 
 renderItems();
 render();
 </script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 async function savePDF() {
-  const btn = document.getElementById("btn-pdf");
-  const orig = btn.textContent;
-  btn.textContent = "Génération…";
-  btn.classList.add("loading");
+  const btn1 = document.getElementById("btn-pdf");
+  const btn2 = document.getElementById("mob-dl-btn");
+  const orig = btn1.textContent;
+  btn1.textContent = "Génération…";
+  btn1.classList.add("loading");
+  if (btn2) { btn2.textContent = "Génération…"; btn2.disabled = true; }
 
+  // Temporarily reset transform for capture
   const invoice = document.getElementById("invoice");
+  const savedTransform = invoice.style.transform;
+  const savedMargin = invoice.style.marginBottom;
+  invoice.style.transform = "";
+  invoice.style.marginBottom = "";
+
+  await new Promise(r => setTimeout(r, 100));
+
   const canvas = await html2canvas(invoice, {
-    scale: 2,
-    useCORS: true,
-    backgroundColor: "#ffffff",
-    width: invoice.offsetWidth,
-    height: invoice.offsetHeight,
+    scale: 2, useCORS: true, backgroundColor: "#ffffff",
+    width: invoice.offsetWidth, height: invoice.offsetHeight,
   });
+
+  invoice.style.transform    = savedTransform;
+  invoice.style.marginBottom = savedMargin;
 
   const { jsPDF } = window.jspdf;
   const pdf = new jsPDF({ unit: "px", format: "a4", orientation: "portrait" });
-
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
-  const imgW = canvas.width;
-  const imgH = canvas.height;
-  const ratio = Math.min(pageW / imgW, pageH / imgH);
-
-  const x = (pageW - imgW * ratio) / 2;
-  pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, 0, imgW * ratio, imgH * ratio);
+  const ratio = Math.min(pageW / canvas.width, pageH / canvas.height);
+  const x = (pageW - canvas.width * ratio) / 2;
+  pdf.addImage(canvas.toDataURL("image/png"), "PNG", x, 0, canvas.width * ratio, canvas.height * ratio);
 
   const num = document.getElementById("inv-num").value || "facture";
   pdf.save(`${num}.pdf`);
 
-  btn.textContent = orig;
-  btn.classList.remove("loading");
+  btn1.textContent = orig;
+  btn1.classList.remove("loading");
+  if (btn2) { btn2.textContent = "Enregistrer PDF ↓"; btn2.disabled = false; }
 }
 </script>
-
 </body>
 </html>
