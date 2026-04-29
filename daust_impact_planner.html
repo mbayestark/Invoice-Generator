@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life at DAUST — Inventory Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;1,9..144,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F5F2EC;
+    --surface: #FDFAF5;
+    --ink: #1A1714;
+    --ink2: #6B6560;
+    --ink3: #B0AAA3;
+    --accent: #C8651A;
+    --accent-light: #F4E6D8;
+    --green: #1D7A50;
+    --green-light: #D6F0E4;
+    --red: #C02B2B;
+    --red-light: #FAE0E0;
+    --border: #E0DAD2;
+    --border-strong: #C8C1B8;
+    --radius: 6px;
+    --radius-lg: 12px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 13px;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 18px 32px;
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+  }
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 300;
+    letter-spacing: -0.5px;
+  }
+  header h1 em { font-style: italic; color: #C8A882; }
+  header span {
+    font-size: 11px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+  }
+
+  /* LAYOUT */
+  main { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+
+  /* SUMMARY CARDS */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin-bottom: 28px;
+  }
+  .metric {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 14px 12px;
+  }
+  .metric .lbl {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink3);
+    margin-bottom: 6px;
+  }
+  .metric .val {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+  }
+  .metric.green .val { color: var(--green); }
+  .metric.orange .val { color: var(--accent); }
+
+  /* BUDGET BAR */
+  .budget-row {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .budget-row label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink2);
+    white-space: nowrap;
+  }
+  .budget-row input[type=number] {
+    width: 140px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 6px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  .budget-bar-wrap { flex: 1; }
+  .budget-bar-bg {
+    height: 6px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+  .budget-bar-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: var(--accent);
+    transition: width 0.25s ease;
+  }
+  .budget-bar-fill.over { background: var(--red); }
+  .budget-status {
+    font-size: 12px;
+    white-space: nowrap;
+    min-width: 130px;
+    text-align: right;
+  }
+  .budget-status.ok { color: var(--green); }
+  .budget-status.over { color: var(--red); }
+
+  /* TABLE */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink3);
+    padding: 12px 14px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    text-align: right;
+    font-weight: 400;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg); }
+  td {
+    padding: 10px 14px;
+    text-align: right;
+    color: var(--ink2);
+    vertical-align: middle;
+  }
+  td:first-child { text-align: left; }
+  .prod-name {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--ink);
+  }
+  /* QTY STEPPER */
+  .qty-stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--bg);
+    transition: border-color 0.15s;
+  }
+  .qty-stepper:focus-within {
+    border-color: var(--accent);
+  }
+  .qty-stepper button {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  .qty-stepper button:hover {
+    background: var(--border);
+    color: var(--ink);
+  }
+  .qty-stepper button:active {
+    background: var(--border-strong);
+  }
+  .qty-stepper button.minus { border-right: 1px solid var(--border); }
+  .qty-stepper button.plus  { border-left: 1px solid var(--border); }
+  .qty-stepper input[type=number] {
+    width: 48px;
+    border: none;
+    padding: 5px 2px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: transparent;
+    color: var(--ink);
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .qty-stepper input[type=number]::-webkit-inner-spin-button,
+  .qty-stepper input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  .qty-stepper input[type=number]:focus {
+    outline: none;
+  }
+  .profit-cell { color: var(--green); font-weight: 500; }
+  .profit-cell.zero { color: var(--ink3); }
+  .margin-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 99px;
+    font-size: 11px;
+    background: var(--green-light);
+    color: var(--green);
+  }
+  .margin-badge.low { background: var(--accent-light); color: var(--accent); }
+
+  /* DELETE BTN */
+  .del-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--ink3);
+    padding: 4px 6px;
+    border-radius: var(--radius);
+    font-size: 14px;
+    transition: color 0.15s, background 0.15s;
+    line-height: 1;
+  }
+  .del-btn:hover { color: var(--red); background: var(--red-light); }
+
+  /* TFOOT */
+  tfoot td {
+    background: var(--bg);
+    border-top: 1px solid var(--border-strong);
+    font-weight: 500;
+    color: var(--ink);
+    padding: 12px 14px;
+  }
+  tfoot td:first-child { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink3); }
+  tfoot .profit-cell { color: var(--green); font-size: 16px; font-family: 'Fraunces', serif; font-weight: 300; }
+
+  /* ADD PRODUCT FORM */
+  .add-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+  }
+  .add-form label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink3);
+    white-space: nowrap;
+  }
+  .add-form input[type=text],
+  .add-form input[type=number] {
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 7px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    background: var(--surface);
+    color: var(--ink);
+    transition: border-color 0.15s;
+  }
+  .add-form input[type=text]:focus,
+  .add-form input[type=number]:focus { outline: none; border-color: var(--accent); }
+  .add-form input[type=text] { width: 130px; }
+  .add-form input[type=number] { width: 100px; }
+  .btn-add {
+    padding: 7px 16px;
+    background: var(--ink);
+    color: var(--bg);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { background: #333; }
+
+  /* ACTION ROW */
+  .actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .btn-export {
+    padding: 9px 20px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .btn-export:hover { background: #A8531A; }
+  .btn-reset {
+    padding: 9px 16px;
+    background: none;
+    color: var(--ink2);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn-reset:hover { background: var(--bg); }
+  .export-hint { font-size: 11px; color: var(--ink3); }
+
+  /* FORM FIELD GROUP */
+  .fg { display: flex; flex-direction: column; gap: 4px; }
+  .add-err { font-size: 11px; color: var(--red); min-height: 16px; }
+
+  @media (max-width: 700px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    header { flex-direction: column; gap: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Life at <em>DAUST</em></h1>
+  <span>Inventory Planner</span>
+</header>
+
+<main>
+
+  <!-- BUDGET -->
+  <div class="budget-row">
+    <label>Budget (FCFA)</label>
+    <input type="number" id="budget" value="500000" step="10000" oninput="updateDerived()">
+    <div class="budget-bar-wrap">
+      <div class="budget-bar-bg"><div class="budget-bar-fill" id="bar-fill"></div></div>
+    </div>
+    <div class="budget-status" id="budget-status"></div>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="metric orange">
+      <div class="lbl">Capital used</div>
+      <div class="val" id="m-cap">—</div>
+    </div>
+    <div class="metric green">
+      <div class="lbl">Total revenue</div>
+      <div class="val" id="m-rev">—</div>
+    </div>
+    <div class="metric green">
+      <div class="lbl">Total profit</div>
+      <div class="val" id="m-prf">—</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">Avg sell price</div>
+      <div class="val" id="m-avg">—</div>
+    </div>
+    <div class="metric">
+      <div class="lbl">Avg margin</div>
+      <div class="val" id="m-mgn">—</div>
+    </div>
+  </div>
+
+  <!-- TABLE -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">Product</th>
+          <th>Cost</th>
+          <th>Sell</th>
+          <th>Margin</th>
+          <th>Qty</th>
+          <th>Capital</th>
+          <th>Revenue</th>
+          <th>Profit</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+      <tfoot>
+        <tr>
+          <td>Totals</td>
+          <td></td>
+          <td></td>
+          <td></td>
+          <td id="t-qty" style="text-align:right"></td>
+          <td id="t-cap" style="text-align:right"></td>
+          <td id="t-rev" style="text-align:right"></td>
+          <td id="t-prf" class="profit-cell" style="text-align:right"></td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- ADD FORM -->
+  <div class="add-form">
+    <div class="fg">
+      <label>Product name</label>
+      <input type="text" id="f-name" placeholder="e.g. Cap">
+    </div>
+    <div class="fg">
+      <label>Cost (FCFA)</label>
+      <input type="number" id="f-cost" placeholder="3000" min="0">
+    </div>
+    <div class="fg">
+      <label>Sell price (FCFA)</label>
+      <input type="number" id="f-sell" placeholder="5000" min="0">
+    </div>
+    <div class="fg">
+      <label>Initial qty</label>
+      <input type="number" id="f-qty" placeholder="0" min="0" value="0">
+    </div>
+    <div class="fg" style="justify-content:flex-end">
+      <label>&nbsp;</label>
+      <button class="btn-add" onclick="addProduct()">+ Add product</button>
+    </div>
+    <div class="add-err" id="add-err"></div>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="actions">
+    <button class="btn-export" onclick="exportCSV()">Export CSV ↓</button>
+    <button class="btn-reset" onclick="resetQty()">Reset quantities</button>
+    <button class="btn-reset" onclick="resetAll()">Reset all</button>
+    <span class="export-hint">Data is saved automatically in your browser.</span>
+  </div>
+
+</main>
+
+<script>
+const STORAGE_KEY = "daust_planner";
+const DEFAULT_PRODUCTS = [
+  { name: "T-shirt",     cost: 5500,  sell: 6500,  qty: 40 },
+  { name: "Shorts",      cost: 8000,  sell: 11000, qty: 25 },
+  { name: "Joggers",     cost: 8000,  sell: 10000, qty: 10 },
+  { name: "Hoodie",      cost: 8000,  sell: 11000, qty: 2  },
+  { name: "Quarter Zip", cost: 13000, sell: 14000, qty: 0  },
+  { name: "Bottle",      cost: 3500,  sell: 4500,  qty: 0  },
+  { name: "Thermos",     cost: 4500,  sell: 5500,  qty: 0  },
+  { name: "Mug",         cost: 1500,  sell: 2500,  qty: 0  },
+];
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      if (Array.isArray(s.products)) return s;
+    }
+  } catch(e) {}
+  return null;
+}
+
+function saveState() {
+  const budget = parseInt(document.getElementById("budget").value) || 0;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ products, budget }));
+}
+
+const saved = loadState();
+let products = saved ? saved.products : JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+
+function fmt(n) { return n.toLocaleString("fr-SN"); }
+function pct(n) { return n.toFixed(1) + "%"; }
+
+function calcRow(p) {
+  const cap = p.cost * p.qty;
+  const rev = p.sell * p.qty;
+  return { cap, rev, profit: rev - cap, margin: ((p.sell - p.cost) / p.sell * 100) };
+}
+
+function buildRows() {
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+
+  products.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.dataset.idx = i;
+    tr.innerHTML = `
+      <td><span class="prod-name">${p.name}</span></td>
+      <td>${fmt(p.cost)}</td>
+      <td>${fmt(p.sell)}</td>
+      <td><span class="margin-badge" data-f="margin"></span></td>
+      <td>
+        <div class="qty-stepper">
+          <button class="minus" aria-label="Decrease">−</button>
+          <input type="number" min="0" value="${p.qty}" data-i="${i}">
+          <button class="plus" aria-label="Increase">+</button>
+        </div>
+      </td>
+      <td data-f="cap"></td>
+      <td data-f="rev"></td>
+      <td class="profit-cell" data-f="profit"></td>
+      <td><button class="del-btn" title="Remove">✕</button></td>
+    `;
+    const input = tr.querySelector("input");
+    input.addEventListener("input", function() {
+      products[i].qty = Math.max(0, parseInt(this.value) || 0);
+      updateDerived();
+    });
+    tr.querySelector(".minus").addEventListener("click", function() {
+      products[i].qty = Math.max(0, products[i].qty - 1);
+      input.value = products[i].qty;
+      updateDerived();
+    });
+    tr.querySelector(".plus").addEventListener("click", function() {
+      products[i].qty = products[i].qty + 1;
+      input.value = products[i].qty;
+      updateDerived();
+    });
+    tr.querySelector(".del-btn").addEventListener("click", function() {
+      deleteProduct(i);
+    });
+    tbody.appendChild(tr);
+  });
+  updateDerived();
+}
+
+function updateDerived() {
+  const tbody = document.getElementById("tbody");
+  const rows = tbody.querySelectorAll("tr");
+
+  let tQty=0, tCap=0, tRev=0, tPrf=0;
+  const margins = [];
+
+  products.forEach((p, i) => {
+    const { cap, rev, profit, margin } = calcRow(p);
+    tQty += p.qty; tCap += cap; tRev += rev; tPrf += profit;
+    margins.push(margin);
+
+    const tr = rows[i];
+    if (!tr) return;
+    const mb = tr.querySelector("[data-f=margin]");
+    mb.textContent = pct(margin);
+    mb.className = "margin-badge" + (margin < 15 ? " low" : "");
+    tr.querySelector("[data-f=cap]").textContent = fmt(cap);
+    tr.querySelector("[data-f=rev]").textContent = fmt(rev);
+    const pCell = tr.querySelector("[data-f=profit]");
+    pCell.textContent = fmt(profit);
+    pCell.className = "profit-cell" + (p.qty === 0 ? " zero" : "");
+  });
+
+  document.getElementById("t-qty").textContent = tQty;
+  document.getElementById("t-cap").textContent = fmt(tCap);
+  document.getElementById("t-rev").textContent = fmt(tRev);
+  document.getElementById("t-prf").textContent = fmt(tPrf);
+
+  const budget = parseInt(document.getElementById("budget").value) || 0;
+  const ratio = budget > 0 ? Math.min(tCap / budget, 1) : 0;
+  const over = tCap > budget;
+  const fill = document.getElementById("bar-fill");
+  fill.style.width = (ratio * 100) + "%";
+  fill.classList.toggle("over", over);
+  const st = document.getElementById("budget-status");
+  if (over) {
+    st.textContent = `Over by ${fmt(tCap - budget)} FCFA`;
+    st.className = "budget-status over";
+  } else {
+    st.textContent = `${fmt(budget - tCap)} FCFA remaining`;
+    st.className = "budget-status ok";
+  }
+
+  document.getElementById("m-cap").textContent = fmt(tCap);
+  document.getElementById("m-rev").textContent = fmt(tRev);
+  document.getElementById("m-prf").textContent = fmt(tPrf);
+  const avgSell = products.length > 0 ? products.reduce((s, p) => s + p.sell, 0) / products.length : 0;
+  const avgMargin = margins.length > 0 ? margins.reduce((a,b) => a+b, 0) / margins.length : 0;
+  document.getElementById("m-avg").textContent = products.length > 0 ? fmt(Math.round(avgSell)) : "—";
+  document.getElementById("m-mgn").textContent = products.length > 0 ? pct(avgMargin) : "—";
+
+  saveState();
+}
+
+function deleteProduct(i) {
+  products.splice(i, 1);
+  buildRows();
+}
+
+function addProduct() {
+  const name = document.getElementById("f-name").value.trim();
+  const cost = parseInt(document.getElementById("f-cost").value);
+  const sell = parseInt(document.getElementById("f-sell").value);
+  const qty  = parseInt(document.getElementById("f-qty").value) || 0;
+  const err  = document.getElementById("add-err");
+
+  if (!name) { err.textContent = "Please enter a product name."; return; }
+  if (!cost || cost <= 0) { err.textContent = "Enter a valid cost price."; return; }
+  if (!sell || sell <= cost) { err.textContent = "Sell price must be higher than cost."; return; }
+
+  err.textContent = "";
+  products.push({ name, cost, sell, qty });
+  document.getElementById("f-name").value = "";
+  document.getElementById("f-cost").value = "";
+  document.getElementById("f-sell").value = "";
+  document.getElementById("f-qty").value = "0";
+  buildRows();
+}
+
+function resetQty() {
+  products.forEach(p => p.qty = 0);
+  buildRows();
+}
+
+function resetAll() {
+  products = JSON.parse(JSON.stringify(DEFAULT_PRODUCTS));
+  document.getElementById("budget").value = "500000";
+  buildRows();
+}
+
+function exportCSV() {
+  const headers = ["Product", "Cost (FCFA)", "Sell (FCFA)", "Margin (%)", "Qty", "Capital (FCFA)", "Revenue (FCFA)", "Profit (FCFA)"];
+  const rows = products.map(p => {
+    const { cap, rev, profit, margin } = calcRow(p);
+    return [p.name, p.cost, p.sell, margin.toFixed(1), p.qty, cap, rev, profit].join(",");
+  });
+  const totals = products.reduce((a, p) => {
+    const r = calcRow(p);
+    a.qty += p.qty; a.cap += r.cap; a.rev += r.rev; a.prf += r.profit;
+    return a;
+  }, {qty:0, cap:0, rev:0, prf:0});
+  rows.push(["TOTAL", "", "", "", totals.qty, totals.cap, totals.rev, totals.prf].join(","));
+
+  const csv = [headers.join(","), ...rows].join("\n");
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+  a.download = "life_at_daust_inventory.csv";
+  a.click();
+}
+
+if (saved && saved.budget) document.getElementById("budget").value = saved.budget;
+buildRows();
+</script>
+</body>
+</html>
