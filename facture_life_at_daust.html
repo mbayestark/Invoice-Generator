@@ -319,6 +319,55 @@ body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: v
 .status-sent  { background: #EAF3DE; color: #3B6D11; }
 .status-paid  { background: #D6F0E4; color: #1D7A50; }
 
+/* ---- RESPONSIVE ---- */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .panel {
+    position: relative;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .preview-area { padding: 20px 12px; }
+  .invoice {
+    width: 100%;
+    min-height: auto;
+    padding: 32px 24px;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+  }
+  .inv-top { flex-direction: column; gap: 20px; }
+  .inv-meta { text-align: left; }
+  .inv-meta table { margin-left: 0; }
+  .inv-parties { grid-template-columns: 1fr; gap: 20px; }
+  .inv-brand .wordmark { font-size: 22px; }
+  .inv-meta .inv-label { font-size: 18px; }
+  .inv-table { font-size: 11px; }
+  .inv-table thead th, .inv-table tbody td { padding: 8px 6px; }
+  .inv-footer {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    right: auto;
+    margin-top: 40px;
+    flex-direction: column;
+    gap: 4px;
+    text-align: center;
+  }
+  .totals-table .total-row .amount { font-size: 16px; }
+}
+
+@media (max-width: 500px) {
+  .panel-body { padding: 14px; }
+  .panel-header { padding: 14px 16px; }
+  .panel-footer { padding: 12px 14px; }
+  .row2 { grid-template-columns: 1fr; }
+  .items-header { grid-template-columns: 1fr 44px 60px 24px; gap: 3px; }
+  .item-row { grid-template-columns: 1fr 44px 60px 24px; gap: 3px; }
+  .invoice { padding: 24px 16px; }
+  .inv-table thead th:nth-child(2),
+  .inv-table tbody td:nth-child(2) { display: none; }
+}
+
 /* ---- PRINT STYLES ---- */
 @media print {
   @page { margin: 0; size: A4; }
